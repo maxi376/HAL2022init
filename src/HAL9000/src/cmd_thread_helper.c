@@ -16,6 +16,7 @@
 #include "ex_timer.h"
 #include "vmm.h"
 #include "pit.h"
+#include "thread.c"
 
 
 #pragma warning(push)
@@ -72,6 +73,7 @@ _CmdReadAndDumpCpuid(
     );
 
 static FUNC_ListFunction _CmdThreadPrint;
+static FUNC_ListFunction _CmdThreadPrint2;
 
 void
 (__cdecl CmdListCpus)(
@@ -126,8 +128,18 @@ void
     )
 {
     STATUS status;
+    int n = 0;
+    LIST_ENTRY list = m_threadSystemData.AllThreadsList;
 
     ASSERT(NumberOfParameters == 0);
+
+    while (m_threadSystemData.AllThreadsList.Flink != NULL)
+        n++;
+    m_threadSystemData.AllThreadsListCount = n;
+
+    m_threadSystemData.AllThreadsList = list;
+        LOG("store the total number of threads in the system :%5s\n");
+        LOG("\n");
 
     LOG("%7s", "TID|");
     LOG("%20s", "Name|");
@@ -141,6 +153,29 @@ void
 
     status = ThreadExecuteForEachThreadEntry(_CmdThreadPrint, NULL );
     ASSERT( SUCCEEDED(status));
+}
+
+void
+(__cdecl CmdListThreads2)(
+    IN          QWORD       NumberOfParameters
+    )
+{
+    STATUS status;
+
+    ASSERT(NumberOfParameters == 0);
+
+    LOG("%7s", "TID|");
+    LOG("%20s", "Name|");
+    LOG("%5s", "Prio|");
+    LOG("%8s", "State|");
+    LOG("%10s", "Cmp ticks|");
+    LOG("%10s", "Prt ticks|");
+    LOG("%10s", "Ttl ticks|");
+    LOG("%10s", "Process|");
+    LOG("\n");
+
+    status = ThreadExecuteForEachThreadEntry(_CmdThreadPrint2, NULL);
+    ASSERT(SUCCEEDED(status));
 }
 
 void
@@ -684,6 +719,33 @@ STATUS
     ASSERT( NULL == FunctionContext );
 
     pThread = CONTAINING_RECORD(ListEntry, THREAD, AllList );
+
+    LOG("%6x%c", pThread->Id, '|');
+    LOG("%19s%c", pThread->Name, '|');
+    LOG("%4U%c", pThread->Priority, '|');
+    LOG("%7s%c", _CmdThreadStateToName(pThread->State), '|');
+    LOG("%9U%c", pThread->TickCountCompleted, '|');
+    LOG("%9U%c", pThread->TickCountEarly, '|');
+    LOG("%9U%c", pThread->TickCountCompleted + pThread->TickCountEarly, '|');
+    LOG("%9x%c", pThread->Process->Id, '|');
+    LOG("\n");
+
+    return STATUS_SUCCESS;
+}
+
+static
+STATUS
+(__cdecl _CmdThreadPrint2) (
+    IN      PLIST_ENTRY     ListEntry,
+    IN_OPT  PVOID           FunctionContext
+    )
+{
+    PTHREAD pThread;
+
+    ASSERT(NULL != ListEntry);
+    ASSERT(NULL == FunctionContext);
+
+    pThread = CONTAINING_RECORD(ListEntry, THREAD, ReadyList);
 
     LOG("%6x%c", pThread->Id, '|');
     LOG("%19s%c", pThread->Name, '|');

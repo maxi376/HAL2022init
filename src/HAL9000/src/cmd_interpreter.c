@@ -67,7 +67,7 @@ static const COMMAND_DEFINITION COMMANDS[] =
     { "timer", "$MODE [$TIME_IN_US] [$TIMES]\n\tSee EX_TIMER_TYPE for timer types\n\t$TIME_IN_US time in uS until timer fires"
                 "\n\t$TIMES - number of times to wait for timer, valid only if periodic", CmdTestTimer, 1, 3},
 
-    { "threads", "Displays all threads", CmdListThreads, 0, 0},
+    { "threads", "Displays all threads", CmdListThreads, 0, 0},//I did run the /threads command and saw the results
     { "run", "$TEST [$NO_OF_THREADS]\n\tRuns the $TEST specified"
              "\n\t$NO_OF_THREADS the number of threads for running the test,"
              "if the number is not specified then it will run on 2 * NumberOfProcessors",
@@ -106,7 +106,9 @@ static const COMMAND_DEFINITION COMMANDS[] =
     { "rangefail", "Causes a range check failure to assert", CmdRangeFail, 0, 0},
     { "bitecookie", "Causes a GS cookie corruption to assert", CmdBiteCookie, 0, 0},
 
-    { "help", "Displays this help menu", _CmdPrintHelp, 0, 0}
+    { "help", "Displays this help menu", _CmdPrintHelp, 0, 0},
+
+    { "readythreads", "Displays this help menu", CmdListThreads2, 0, 0}
 };
 
 #define NO_OF_COMMANDS      ARRAYSIZE(COMMANDS)

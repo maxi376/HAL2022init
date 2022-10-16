@@ -31,6 +31,7 @@ typedef struct _THREAD_SYSTEM_DATA
 
     _Guarded_by_(AllThreadsLock)
     LIST_ENTRY          AllThreadsList;
+    int                 AllThreadsListCount;
 
     LOCK                ReadyThreadsLock;
 
@@ -440,11 +441,11 @@ ThreadTick(
     }
     pThread->TickCountCompleted++;
 
-    if (++pCpu->ThreadData.RunningThreadTicks >= THREAD_TIME_SLICE)
+    /*if (++pCpu->ThreadData.RunningThreadTicks >= THREAD_TIME_SLICE)
     {
         LOG_TRACE_THREAD("Will yield on return\n");
         pCpu->ThreadData.YieldOnInterruptReturn = TRUE;
-    }
+    }*/
 }
 
 void
@@ -456,7 +457,7 @@ ThreadYield(
     INTR_STATE oldState;
     PTHREAD pThread = GetCurrentThread();
     PPCPU pCpu;
-    BOOLEAN bForcedYield;
+    //BOOLEAN bForcedYield;
 
     ASSERT( NULL != pThread);
 
@@ -466,8 +467,8 @@ ThreadYield(
 
     ASSERT( NULL != pCpu );
 
-    bForcedYield = pCpu->ThreadData.YieldOnInterruptReturn;
-    pCpu->ThreadData.YieldOnInterruptReturn = FALSE;
+    /*bForcedYield = pCpu->ThreadData.YieldOnInterruptReturn;
+    pCpu->ThreadData.YieldOnInterruptReturn = FALSE;*/
 
     if (THREAD_FLAG_FORCE_TERMINATE_PENDING == _InterlockedAnd(&pThread->Flags, MAX_DWORD))
     {
@@ -480,10 +481,10 @@ ThreadYield(
     {
         InsertTailList(&m_threadSystemData.ReadyThreadsList, &pThread->ReadyList);
     }
-    if (!bForcedYield)
-    {
+    //if (!bForcedYield)
+    //{
         pThread->TickCountEarly++;
-    }
+    //}
     pThread->State = ThreadStateReady;
     _ThreadSchedule();
     ASSERT( !LockIsOwner(&m_threadSystemData.ReadyThreadsLock));
@@ -574,7 +575,8 @@ ThreadYieldOnInterrupt(
     void
     )
 {
-    return GetCurrentPcpu()->ThreadData.YieldOnInterruptReturn;
+    //return GetCurrentPcpu()->ThreadData.YieldOnInterruptReturn;
+    return TRUE;
 }
 
 void
